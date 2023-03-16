@@ -1,0 +1,269 @@
+---
+title: "Studying the Impact of Virtual Reality on Sports: An Experimental Study"
+format:
+  pdf:
+    geometry: 
+      - top=30mm
+      - left=30mm
+highlight-style: pygments
+---
+
+Author: Anusha Ronaki, Lokendra Singh Badgujar, Mehul Agarwal, Prateek Naharia
+
+Siddharth Bookinkere, Sonal Kaur.
+
+```{r setup, include=FALSE}
+# Please do not change this
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+You can add options to executable code like this
+
+```{r}
+#| include: FALSE
+library(data.table)
+library(tidyverse)
+library(ggplot2)
+library(pwr)
+install.packages("effsize")
+library(effsize)
+```
+
+```{r}
+
+dataset <- fread('DART.csv')
+colnames(dataset)[6] <- "frequency"
+colnames(dataset)[7] <- "head_tail"
+colnames(dataset)[8] <- "test"
+colnames(dataset)[9] <- "throw1"
+colnames(dataset)[10] <- "throw2"
+colnames(dataset)[11] <- "throw3"
+
+for (col in c("Degree", "Gender", "Age", "frequency", "head_tail")) {
+  dataset[[col]] <- as.factor(dataset[[col]])
+}
+dataset
+```
+
+```{r}
+dataset$total_score <- dataset$throw1 + dataset$throw2 + dataset$throw3
+dataset$accuracy <- dataset$total_score / 30
+dataset$accuracy <- round(dataset$accuracy, 5)
+data_treatment <- dataset[test == 1]
+data_control <- dataset[test == 0]
+```
+
+```{r}
+mean_converted_test <- mean(data_treatment$accuracy)
+mean_converted_control <- mean(data_control$accuracy)
+ATE_hat <- mean_converted_test - mean_converted_control
+
+print(paste0('Mean for Treatment: ',mean_converted_test))
+print(paste0('Mean for Control: ',mean_converted_control))
+print(paste0('ATE HAT:',ATE_hat))
+
+mean(data_treatment$accuracy)
+```
+
+```{r}
+variance_treat <- var(data_treatment$accuracy)
+variance_cnt <- var(data_control$accuracy)
+variance_treat
+variance_cnt
+summary(dataset)
+
+```
+
+```{r}
+summary(data_control)
+```
+
+```{r}
+summary(data_treatment)
+```
+
+```{r}
+t.test(dataset[test == 1, accuracy], dataset[test == 0, accuracy])
+```
+
+```{r}
+str(dataset)
+```
+
+```{r}
+ggplot(data = dataset, aes(x = head_tail, y = accuracy, fill = head_tail)) + 
+  geom_boxplot() +
+  ggtitle("Effect of VR on Dartboard Accuracy") +
+  xlab("Experiment Groups") +
+  ylab("Accuracy") +
+  scale_fill_manual(values = c("#00AFBB", "#FC4E07")) +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+gender_data <- subset(dataset, select=c(Gender))
+
+# Count the frequency of each gender
+gender_count <- table(gender_data)
+gender_count
+```
+
+```{r}
+# Create a data frame with the gender labels and counts
+gender_df <- data.frame(Gender=names(gender_count), Count=gender_count)
+
+# Create the pie chart
+ggplot(gender_df, aes(x="", y=gender_count, fill=Gender)) + 
+  geom_bar(stat="identity", width=1) +
+  coord_polar(theta="y") +
+  scale_fill_manual(values=c("#FFC0CB", "#ADD8E6")) + 
+  theme_void() +
+  labs(title="Gender Distribution") +
+  theme(plot.title=element_text(hjust=0.5))
+```
+
+```{r}
+ggplot(dataset, aes(x=frequency)) +
+  geom_bar(aes(y = (..count..)/sum(..count..)), width = 0.7, fill = "#00AFBB") +
+  scale_y_continuous(labels = scales::percent_format()) +
+  ggtitle("Frequency Distribution") +
+  xlab("Frequency") +
+  ylab("Percent") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+```{r}
+ggplot(data = dataset, aes(x = frequency, fill = as.factor(test))) +
+  geom_bar(position = "dodge") +
+  scale_fill_manual(values = c("#00AFBB", "#FC4E07"), name = "Group") +
+  ggtitle("Frequency Distribution by Experiment Group") +
+  xlab("Frequency") +
+  ylab("Count") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+```{r}
+library(ggplot2)
+
+ggplot(data = dataset, aes(x = Degree, fill = Degree)) + 
+  geom_bar() +
+  ggtitle("Distribution of Degrees") +
+  xlab("Degree") +
+  ylab("Count") +
+  scale_fill_manual(values = c("#00AFBB", "#FC4E07",
+                                        "#E7B800", "#868686",
+                                        "#FF7F0F", "#8DA0CB")) +
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+```{r}
+se <- sqrt(var(data_treatment$accuracy) / length(data_treatment$accuracy) + var(data_control$accuracy) / length(data_control$accuracy))
+print(paste0("Standard Error:",se))
+```
+
+```{r}
+#Creating subset for treatment and control group
+data_treatment_subset <- subset(dataset, test == 1)
+data_control_subset <- subset(dataset, test == 0)
+```
+
+```{r}
+model_reg <- lm(accuracy ~ test, data = dataset)
+summary(model_reg)
+
+```
+
+```{r}
+model_reg <- lm(throw2 ~ test, data = dataset)
+summary(model_reg)
+
+```
+
+```{r}
+model_reg <- lm(throw1 ~ test, data = dataset)
+summary(model_reg)
+```
+
+```{r}
+model_reg <- lm(throw3 ~ test, data = dataset)
+summary(model_reg)
+
+```
+
+```{r}
+mean(dataset$throw1)
+mean(dataset$throw2)
+mean(dataset$throw3)
+```
+
+```{r}
+dataset$mean_allthrows <- dataset$total_score / 3
+dataset
+```
+
+```{r}
+model_reg <- lm(accuracy ~ test + frequency, data = dataset)
+summary(model_reg)
+
+
+```
+
+```{r}
+model_reg <- lm(accuracy ~ test + frequency + Gender + Degree , data = dataset)
+summary(model_reg)
+
+```
+
+COHEN_D
+
+I can see from the output of the t-test that the p-value is 0.2853,
+
+which is greater than the commonly used alpha level of 0.05.
+
+This means that we fail to reject the null hypothesis that
+
+the mean accuracy between the treatment and control groups is equal.
+
+```{r}
+group1 <- data_treatment$accuracy
+group2 <- data_control$accuracy
+
+d <- cohen.d(group1,group2)
+d
+
+```
+
+Therefore, we conducted the power test with 36 participants in each group
+
+with previously calculated Cohen's D value of d=0.2538481. The power of experiment was 0.1859243 and a significance level of 0.05 which is a significantly low power experiment.
+
+```{r}
+pwr.t.test(n=36, d=0.2538481, sig.level = 0.05, power=NULL, type = "two.sample")
+```
+
+Further, we conducted a second power test to determine how many observation we require to achieve a power of 0.8 for the experiment. According to the test results, we require 245 participants in each group to achieve a power of 0.8.
+
+```{r}
+pwr.t.test(n=NULL, d=0.2538481, sig.level = 0.05, power=0.8, type = "two.sample")
+
+```
+
+Since the p-value is greater than the significance level of 0.05, we fail to reject the null hypothesis.
+
+This means that we do not have sufficient evidence to conclude that the true proportion is different from 0.5.
+
+The 95 % CI for the true proportion is (0.3874709, 0.6125291).
+
+This means that we can be 95 percent confident that the true proportion falls within this interval.
+
+The sample estimate of the proportion is 0.5, which is exactly the null hypothesis value.
+
+Hence, the randomization was done properly.
+
+```{r}
+#Randomization Check
+prop.test(dataset[test == 1, .N], 72, 0.5)
+```
