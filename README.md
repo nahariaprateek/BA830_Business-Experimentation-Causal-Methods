@@ -1,5 +1,6 @@
 # BA830_Business-Experimentation-Causal-Methods
 January 2023 - March 16th 
+
 Instructor: Professor Andrey Fradkin at Questrom School Of Business 
 ### R/Stats Resources
 
